@@ -1,7 +1,7 @@
 import requests
 from urllib.parse import urlencode
 from pyquery import PyQuery as pq
-
+import json
 
 base_url = 'https://m.weibo.cn/api/container/getIndex?'
 headers = {
@@ -27,29 +27,24 @@ def get_page(since_id):
         params['since_id'] = since_id
 
     url = base_url + urlencode(params)
-    try:
-        response = requests.get(url, headers=headers)
-        if response.status_code == 200:
-            return response.json(), page
-    except requests.ConnectionError as e:
-        print('Error', e.args)
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        return response.json() # Requests 中也有一个内置的 JSON 解码器，助你处理 JSON 数据
 
 
-def parse_page(json, page: int):
-    if json:
-        items = json.get('data').get('cards')
+
+def parse_page(content):
+    if content:
+        items = content.get('data').get('cards')
         for index, item in enumerate(items):
-            if page == 1 and index == 1:
-                continue
-            else:
-                item = item.get('mblog', {})
-                weibo = {}
-                weibo['id'] = item.get('id')
-                weibo['text'] = pq(item.get('text')).text()
-                weibo['attitudes'] = item.get('attitudes_count')
-                weibo['comments'] = item.get('comments_count')
-                weibo['reposts'] = item.get('reposts_count')
-                yield weibo
+            item = item.get('mblog')
+            weibo = {}
+            weibo['id'] = item.get('id')
+            weibo['text'] = pq(item.get('text')).text()
+            weibo['attitudes'] = item.get('attitudes_count')
+            weibo['comments'] = item.get('comments_count')
+            weibo['reposts'] = item.get('reposts_count')
+            yield weibo
 
 
 # def save_to_mongo(result):
@@ -64,12 +59,12 @@ def save_to_json(result):
 if __name__ == '__main__':
     since_id = 0
     for page in range(1, MAX_PAGE + 1):
-        json = get_page(since_id)
-        since_id = json[0].get('data').get('cardlistInfo').get('since_id')
-        results = parse_page(*json)
+        content = get_page(since_id)
+        since_id = content.get('data').get('cardlistInfo').get('since_id')
+        results = parse_page(content)
         for result in results:
             print(result)
-            # save_to_json(result)
+            save_to_json(result)
 
 
 
