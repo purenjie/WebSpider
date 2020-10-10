@@ -424,7 +424,7 @@ button.click() # 点击按钮
 
 #### 执行 JavaScript
 
-`execute_script()` 直接模拟运行 JS
+`execute_script()` 直接模拟运行 JS，下拉进度条到最底部
 
 ```python
 from selenium import webdriver
@@ -466,9 +466,13 @@ print(logo.size) # 节点大小
 
 **隐式等待**
 
+当使用隐式等待执行测试的时候，如果 Selenium 没有在 DOM 中找到节点，将继续等待，超出设定时间后，则抛出找不到节点的异常。换句话说，当查找节点而节点并没有立即出现的时候，隐式等待将等待一段时间再查找 DOM，默认的时间是 0。
+
 `browser.implicitly_wait(10)`
 
 **显式等待**
+
+指定要查找的节点，然后指定一个最长等待时间。如果在规定时间内加载出来了这个节点，就返回查找的节点；如果到了规定时间依然没有加载出该节点，则抛出超时异常。
 
 ```python
 from selenium import webdriver
@@ -479,8 +483,10 @@ from selenium.webdriver.support import expected_conditions as EC
 browser = webdriver.Chrome()
 browser.get('https://www.taobao.com/')
 wait = WebDriverWait(browser, 10)
-input = wait.until(EC.presence_of_element_located((By.ID, 'q')))
-button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, '.btn-search')))
+input = wait.until(EC.presence_of_element_located((By.ID, 'q'))) # 节点出现
+button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, '.btn-search'))) # 可点击
+urls = wait.until(EC.presence_of_all_elements_located((By.XPATH, '/html/body/main/section/div/section[1]/div/div/a'))) # 所有节点加载出来
+urls = [url.get_attribute('href') for url in urls] # get_attribute() 获取节点属性
 print(input, button)
 ```
 
@@ -526,6 +532,19 @@ except NoSuchElementException:
     print('No Element')
 finally:
     browser.close()
+```
+
+#### Chrome Headless 模式
+
+Headless 模式可以让 Chrome 无界面的运行，相当于开了一个无界面的浏览器的进程，然后可以通过接口或者 Chrome 开发者调试工具来操作 Chrome，包括加载页面、获取元数据（DOM 信息等）等等，所有 Chrome 提供的功能都可以使用。
+
+```python
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+
+chrome_options = Options()
+chrome_options.add_argument('--headless')
+driver = webdriver.Chrome(chrome_options=chrome_options)
 ```
 
 ## 验证码的识别
