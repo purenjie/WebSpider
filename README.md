@@ -424,16 +424,29 @@ button.click() # 点击按钮
 
 #### 执行 JavaScript
 
-`execute_script()` 直接模拟运行 JS，下拉进度条到最底部
+`execute_script()` 直接模拟运行 JS，下拉进度条到`最底部`
+
+- 方法 1
 
 ```python
 from selenium import webdriver
 
 browser = webdriver.Chrome()
 browser.get('https://www.zhihu.com/explore')
-browser.execute_script('window.scrollTo(0, document.body.scrollHeight)')
+browser.execute_script('window.scrollTo(0, document.body.scrollHeight)') # 执行下拉脚本
 browser.execute_script('alert("To Bottom")')
 ```
+
+- 方法 2
+
+```python
+target = browser.find_element_by_xpath("/html/body/main/section/div/section[1]/div/div/a[80]") 
+browser.execute_script("arguments[0].scrollIntoView();", target) #拖动到可见的元素去
+```
+
+[selenium 模拟拖动滚动条下拉](https://blog.csdn.net/legend818/article/details/93299984)
+
+[selenium 中如何模拟页面滚动？](https://www.zhihu.com/question/49176890)
 
 #### 获取节点信息
 
